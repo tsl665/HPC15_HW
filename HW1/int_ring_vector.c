@@ -28,8 +28,11 @@ int main( int argc, char *argv[])
   MPI_Comm_size(MPI_COMM_WORLD,&np);
   N = atoi(argv[1]);
 
-  int message_out = -1;
-  int message_in = -1;
+  int *message_out;
+  int *message_in;
+  unsigned int L = 2e6 / sizeof(int);
+  message_out = (int *) malloc(2e6);
+  message_in = (int *) malloc(2e6);
   tag = 99;
   
 //  get_timestamp(&time1);
@@ -58,17 +61,19 @@ int main( int argc, char *argv[])
 
 
     if ( (i != 0) || (rank != 0) ) {
-      MPI_Recv(&message_in, 1, MPI_INT, origin, tag, MPI_COMM_WORLD, &status);
-      message_out = message_in + rank;
-      printf("rank %d hosted on %s received from %d the message %d\n", rank, hostname, origin, message_in);
+      MPI_Recv(message_in, L, MPI_INT, origin, tag, MPI_COMM_WORLD, &status);
+      message_out[0] = message_in[0] + rank;
+      printf("rank %d hosted on %s received from %d the message %d\n", rank, hostname, origin, message_in[0]);
     }
     else {
-      message_out = 0;
-      printf("Start with initial value %i \n", message_out);
+      message_out[0] = 0;
+      printf("Start with initial value %i \n", message_out[0]);
 
     }
-    if ( (i != N - 1) || (rank != np - 1) ) {  
-      MPI_Send(&message_out, 1, MPI_INT, destination, tag, MPI_COMM_WORLD);
+
+    if ( (i != N - 1) || (rank != np - 1) ) {
+
+      MPI_Send(message_out, L, MPI_INT, destination, tag, MPI_COMM_WORLD);
     }
 
   }
