@@ -12,7 +12,8 @@ int main (int argc, char **argv)
 {
     long  i,j, nMatrix, iterMax;
     int np, rank;
-    double *u, *f,*u_new;
+    double *u, *f, *u_new;
+    clock_t tstart, tend;
 
     if (argc != 3) {
       fprintf(stderr, "need two arguments (size of matrix, number of iterations). \n");
@@ -21,6 +22,8 @@ int main (int argc, char **argv)
 
     nMatrix = atol(argv[1]);
     iterMax = atol(argv[2]);
+
+    
 
     MPI_Init(&argc, &argv);
     MPI_Status status[2];
@@ -56,6 +59,8 @@ int main (int argc, char **argv)
     
     double message_out[2];
 
+    tstart = clock();
+
     for (i = 0; i < iterMax; i++) {
 
 
@@ -90,17 +95,28 @@ int main (int argc, char **argv)
       
 
     }
-    
 //    printf("End of loop. Rank = %i \n", rank);
 
-    for (i = 0; i < n; i++) {
+
+    tend = clock();
+    double elapsed = (double) (tend - tstart) / CLOCKS_PER_SEC;
+
+//  Print the numerical solution with point-wise error
+/*
+    for (i = 1; i < n-1; i++) {
       int pt = (rank * (n - 2) + i);
       double x = ((double) (rank * (n - 2) + i))*h;
       double true_sol = 0.5 * x * x - 0.5 * x;
 
       printf("pt = %i, x = %f, u(x) = %f; p.w.error = %e \n", pt, x, u[i],u[i]-true_sol);
     }
+*/
 
+//  Print cputime
+
+    if (rank == 0) {
+      printf("time = %f s; np = %i; N = %ld; time * np = %f \n",elapsed,np,nMatrix, elapsed*np);
+    }
 
     free(u);
     free(f);
