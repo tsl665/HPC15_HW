@@ -1,4 +1,4 @@
-EXECUTABLES = int_ring int_ring_vector
+EXECUTABLES = int_ring int_ring_vector jacobi-mpi
 COMPILER = mpicc-openmpi-mp
 FLAGS = -O3 -Wall
 
@@ -9,6 +9,9 @@ int_ring: int_ring.c
 
 int_ring_vector: int_ring_vector.c
 	$(COMPILER) $(FLAGS) int_ring_vector.c -o int_ring_vector
+
+jacobi-mpi: jacobi-mpi.c
+	$(COMPILER) $(FLAGS) jacobi-mpi.c -o jacobi-mpi
 
 clean: $(EXECUTABLES)
 	rm $(EXECUTABLES)
