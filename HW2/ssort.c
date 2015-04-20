@@ -22,7 +22,7 @@ static int compare(const void *a, const void *b)
 int main( int argc, char *argv[])
 {
   int rank;
-  int i, N;
+  int i, N, s, size;
   int *vec;
 
   MPI_Init(&argc, &argv);
@@ -31,6 +31,9 @@ int main( int argc, char *argv[])
   /* Number of random numbers per processor (this should be increased
    * for actual tests or could be passed in through the command line */
   N = 100;
+  s = 10;
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+
 
   vec = calloc(N, sizeof(int));
   /* seed random number generator differently on every core */
@@ -42,8 +45,29 @@ int main( int argc, char *argv[])
   }
   printf("rank: %d, first entry: %d\n", rank, vec[0]);
 
+    
+  for (i = 0; i < s; ++i){
+    MPI_Gather(&vec[i],1,MPI_INT,&rec[i],s,MPI_INT,0,MPI_COMM_WORLD);
+  }
+
+
   /* sort locally */
   qsort(vec, N, sizeof(int), compare);
+
+  if (rank == 0) {
+    qsort(rec, s*size, sizeof(int), compare);
+  }
+
+  
+
+
+
+
+
+
+
+
+
 
   /* randomly sample s entries from vector or select local splitters,
    * i.e., every N/P-th entry of the sorted vector */
