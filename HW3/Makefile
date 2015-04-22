@@ -5,8 +5,8 @@ OPTION = -fopenmp -o
 
 all: $(EXECUTABLES)
 
-jacobi: jacobi.c
-	$(COMPILER) jacobi.c $(OPTION) jacobi
+jacobi: Jacobi.c
+	$(COMPILER) Jacobi.c $(OPTION) jacobi
 
 RBGS: RBGS.c
 	$(COMPILER) RBGS.c $(OPTION) RBGS
