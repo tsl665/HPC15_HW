@@ -14,7 +14,7 @@ int main( int argc, char *argv[])
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   N = 100;
-  s = 5;
+  s = rank+1;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
 
@@ -24,12 +24,23 @@ int main( int argc, char *argv[])
     vec[i] = i+1;
     rec[i] = 0;
   }
-
-  for (i = 0; i<s; i++) {
-    MPI_Gather(&vec[i],1,MPI_INT,&rec[i],s,MPI_INT,0,MPI_COMM_WORLD);
+/*
+  for (i = 0; i<1; i++) {
+    MPI_Gather(&vec[i],2,MPI_INT,&rec[i],size,MPI_INT,0,MPI_COMM_WORLD);
   }
+*/
 
-//    MPI_Gather(&vec[i],1,MPI_INT,&rec[size*i],size,MPI_INT,0,MPI_COMM_WORLD);
+//    MPI_Gather(&vec[0],s,MPI_INT,&rec[0],s,MPI_INT,0,MPI_COMM_WORLD);
+    if (rank > 5)
+    {
+      for (i = 1; i<10000; i++)
+      {
+        vec[0] = vec[0] + 1;
+      }
+    }
+    MPI_Gather(&rank,1,MPI_INT,&rec[0],1,MPI_INT,0,MPI_COMM_WORLD);
+    printf("rank %i is finished. \n",rank);
+
 
   if (rank == 0){
     printf("rec = ");
@@ -38,6 +49,12 @@ int main( int argc, char *argv[])
     }
     printf("; \n");
   }
+
+
+//  s = (5+4)/2;
+
+//  printf("%i \n",s);
+
 
   free(vec);
   free(rec);

@@ -19,11 +19,42 @@ static int compare(const void *a, const void *b)
     return 0;
 }
 
+static int binsearch(int *a, int N, int b, int *ind)
+{
+  int iL, iR, iM;
+  iL = 0;
+  iR = N-1;
+  *ind = -1;
+
+  while (iL <= iR) {
+    iM = iL + (iR - iL)/2;
+    if (a[iM] < b) {
+      iL = iM + 1;
+    }
+    else if (a[iM] > b) {
+      iR = iM - 1;
+    }
+    else {
+      *ind = iM;
+      break;
+    }
+  }
+
+  if (*ind == -1) {
+    *ind = iL;
+  }
+
+  return 0;
+}
+
+
+
+
 int main( int argc, char *argv[])
 {
   int rank;
-  int i, N, s, size;
-  int *vec;
+  int i, N, S, P,*iSpl,iSold;
+  int *vec,*rec,*spl;
 
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -31,34 +62,78 @@ int main( int argc, char *argv[])
   /* Number of random numbers per processor (this should be increased
    * for actual tests or could be passed in through the command line */
   N = 100;
-  s = 10;
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  S = 10;
+  MPI_Comm_size(MPI_COMM_WORLD, &P);
 
 
   vec = calloc(N, sizeof(int));
+  rec = calloc(N, sizeof(int));
+  spl = calloc(P-1,sizeof(int));
+  iSpl = calloc(P-1,sizeof(int));
   /* seed random number generator differently on every core */
   srand((unsigned int) (rank + 393919));
 
   /* fill vector with random integers */
   for (i = 0; i < N; ++i) {
     vec[i] = rand();
+    rec[i] = 0;
   }
   printf("rank: %d, first entry: %d\n", rank, vec[0]);
 
-    
-  for (i = 0; i < s; ++i){
-    MPI_Gather(&vec[i],1,MPI_INT,&rec[i],s,MPI_INT,0,MPI_COMM_WORLD);
-  }
-
+  MPI_Gather(&vec[0],S,MPI_INT,&rec[0],S,MPI_INT,0,MPI_COMM_WORLD);
 
   /* sort locally */
   qsort(vec, N, sizeof(int), compare);
 
+/*
+  printf("vec = ");
+  for (i = 0; i<N; i++){
+    printf("%i, ",vec[i]);
+  }
+  printf("\n");
+
+  printf("S = %i, ind(S) = %i \n",S,P);
+
+*/
+
+
   if (rank == 0) {
-    qsort(rec, s*size, sizeof(int), compare);
+    qsort(rec, S*P, sizeof(int), compare);
+    for (i = 0; i < P-1; i++) {
+      spl[i] = rec[i*S];
+    }
+    MPI_Bcast(&spl[0],P-1,MPI_INT,0,MPI_COMM_WORLD);
   }
 
-  
+  iSold = 0;
+
+/*
+
+  k = 0;
+  for (i = 0; i < P-1; i++) {
+    // find the i-th splitter and send the length to i-th core.
+    binsearch(vec, N, spl[i], &iSnew);
+    len = iSnew - iSold + 1;
+    MPI_Gather(&len,1,MPI_INT,&vecLen[0],1,MPI_INT,i,MPI_COMM_WORLD);
+    if (rank != i) {
+      // Not at i-th core: just send the piece of data need by i-th
+      // core.
+      MPI_Isend(&vec[iSold],len,MPI_INT,i,rank,MPI_COMM_WORLD,&req);
+      iSold = iSnew;
+    } else {
+      //At i-th core: recieve data from each other core; copy data
+      //from itself.
+      for (j = 0; j < i; j++) {
+        MPI_Irecv(&rec[k],vecLen[j],MPI_INT,j,j,MPI_COMM_WORLD,&req);
+        k = k + vecLen[j];
+      }
+
+      for (j = 0; j < vecLen[i]; j++) {
+        rec[k+j] = 
+
+
+*/
+
 
 
 
