@@ -13,7 +13,15 @@ int main (int argc, char **argv)
     double *u, *f,*u_new;
     double h, res,resInit, tol;
 
-    n = 100;
+
+    if (argc != 2) {
+      fprintf(stderr, "Function needs matrix size as the input argument!\n");
+      abort();
+    }
+      
+
+//    n = 100;
+    n = atoi(argv[1]);
     u = (double *) malloc(sizeof(double)*n);
     f = (double *) malloc(sizeof(double)*n);
     u_new = (double *) malloc(sizeof(double)*n);
@@ -84,14 +92,42 @@ int main (int argc, char **argv)
     get_timestamp(&time2);
     double elapsed = timestamp_diff_in_seconds(time1,time2);
     
-    
+
+//  Output to a file
+
+  {
+    FILE* fd = NULL;
+    char filename[256];
+    snprintf(filename, 256, "jacobi_output%02d.txt", nthreads);
+    fd = fopen(filename,"w+");
+
+    if(NULL == fd)
+    {
+      printf("Error opening file \n");
+      return 1;
+    }
+
+
+    fprintf(fd, "========= Jacobi Method ========= \n");
+    fprintf(fd, "N =  %ld \n", n);
+    fprintf(fd, "Number of threads = %d\n ",nthreads);
+    fprintf(fd, "Initial Residual is %e \n", resInit);
+    fprintf(fd, "Final Residual is %e \n", res);
+    fprintf(fd, "Converge in %ld Iterations. \n", iter);
+    fprintf(fd, "Time elapsed is %f seconds.\n", elapsed);
+
+    fclose(fd);
+  }
+
+
     printf("========= Jacobi Method ========= \n");
-    printf("N =  %ld \n", n);    
+    printf("N =  %ld \n", n);
+    printf("Number of threads = %d\n ",nthreads);
     printf("Initial Residual is %e \n", resInit);
     printf("Final Residual is %e \n", res);
     printf("Converge in %ld Iterations. \n", iter);
     printf("Time elapsed is %f seconds.\n", elapsed);
-    
+
     
     free(u);
     free(f);

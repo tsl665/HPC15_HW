@@ -13,13 +13,13 @@ int main (int argc, char **argv)
     double *u, *f;
     double h, res,resInit, tol;
     
-/*    if (argc != 1) {
-        fprintf(stderr, "Function needs vector size as input arguments!\n");
-        abort();
+    if (argc != 2) {
+      fprintf(stderr, "Function needs matrix size as the input argument!\n");
+      abort();
     }
-    */
     
-    n = 100;
+//    n = 100;
+    n = atoi(argv[1]);
     u = (double *) malloc(sizeof(double)*n);
     f = (double *) malloc(sizeof(double)*n);
     h = 1/(n+1);
@@ -73,6 +73,29 @@ int main (int argc, char **argv)
     get_timestamp(&time2);
     double elapsed = timestamp_diff_in_seconds(time1,time2);
     
+  {
+    FILE* fd = NULL;
+    char filename[256];
+    snprintf(filename, 256, "RBGS_output%02d.txt", nthreads);
+    fd = fopen(filename,"w+");
+
+    if(NULL == fd)
+    {
+      printf("Error opening file \n");
+      return 1;
+    }
+
+
+    fprintf(fd, "========= Red-Black Gauss-Seidel Method ========= \n");
+    fprintf(fd, "N =  %ld \n", n);
+    fprintf(fd, "Number of threads = %d\n ",nthreads);
+    fprintf(fd, "Initial Residual is %e \n", resInit);
+    fprintf(fd, "Final Residual is %e \n", res);
+    fprintf(fd, "Converge in %ld Iterations. \n", iter);
+    fprintf(fd, "Time elapsed is %f seconds.\n", elapsed);
+
+    fclose(fd);
+  }
     
     printf("========= Red-Black Gauss-Seidel Method ======== \n");
     printf("N =  %ld \n", n);    
