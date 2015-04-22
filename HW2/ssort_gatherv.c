@@ -70,7 +70,7 @@ int main( int argc, char *argv[])
   }
 
   N = atoi(argv[1]);
-  M = N*5;
+  M = N*2;
   S = sqrt(N);
   MPI_Comm_size(MPI_COMM_WORLD, &P);
 
@@ -192,18 +192,43 @@ int main( int argc, char *argv[])
   qsort(rec,Nrec,sizeof(int),compare);
 
 // Print result to screen
+  printf("Rank: %d: Length = %d; \n", rank, Nrec);
+
+//
+//
+/*
   for (i = 0; i < P; i++) {
     if (rank == i) {
       printf("Rank: %d: Length = %d; \n", rank, Nrec);
-      /*
-      printf("rec = ")
-      for (j = 0; j<Nrec; j++) {
-        printf("%d ",rec[j]);
-      }
-      printf("\n\n");
-      */
+      
+      //printf("rec = ")
+      //for (j = 0; j<Nrec; j++) {
+      //  printf("%d ",rec[j]);
+      //}
+      //printf("\n\n");
+      
     }
     MPI_Barrier(MPI_COMM_WORLD);
+  }
+*/
+//  Output to a file
+  {
+    FILE* fd = NULL;
+    char filename[256];
+    snprintf(filename, 256, "output%02d.txt", rank);
+    fd = fopen(filename,"w+");
+
+    if(NULL == fd)
+    {
+      printf("Error opening file \n");
+      return 1;
+    }
+
+    fprintf(fd, "rank %d stores vector of length %d. \n", rank, Nrec);
+    for(j = 0; j < Nrec; j++)
+      fprintf(fd, "%d  ", rec[j]);
+
+    fclose(fd);
   }
 
   free(vec);
