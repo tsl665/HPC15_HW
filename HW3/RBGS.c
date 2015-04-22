@@ -9,6 +9,7 @@
 int main (int argc, char **argv)
 {
     long  i, n, iter;
+    int nthreads;
     double *u, *f;
     double h, res,resInit, tol;
     
@@ -37,22 +38,32 @@ int main (int argc, char **argv)
     resInit = res;
     tol = resInit*1E-6;
 
+    #pragma omp parallel
+      #pragma omp master 
+      {
+        nthreads = omp_get_num_threads();
+        printf("Number of threads = %d\n ",nthreads);
+      }
+
     timestamp_type time1, time2;
     get_timestamp(&time1);
     
     iter = 0;
     while (res > tol) {
         // Update Odd Points
+        #pragma omp parallel for shared(u,h,f,n) private(i)
         for (i = 1; i < n - 1; i+=2) {
             u[i] = (u[i-1]+u[i+1]+h*h*f[i])/2;
         }
         
         // Update Even Points
+        #pragma omp parallel for shared(u,h,f,n) private(i)
         for (i = 2; i < n - 1; i+=2) {
             u[i] = (u[i-1]+u[i+1]+h*h*f[i])/2;
         }
         // Calculate Residual
         res = 0;
+        #pragma omp parallel for shared(u,h,f,n) private(i) reduction(+:res)
         for (i = 1; i < n - 1; ++i) {
             res = res + fabs(f[i]*h*h - (-u[i-1] + 2*u[i] - u[i+1]));
         }

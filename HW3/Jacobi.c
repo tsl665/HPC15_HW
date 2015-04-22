@@ -3,15 +3,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <omp.h>
 #include "util.h"
 
 int main (int argc, char **argv)
 {
     long  i, n, iter;
+    int nthreads;
     double *u, *f,*u_new;
     double h, res,resInit, tol;
 
-    n = 1000;
+    n = 100;
     u = (double *) malloc(sizeof(double)*n);
     f = (double *) malloc(sizeof(double)*n);
     u_new = (double *) malloc(sizeof(double)*n);
@@ -33,6 +35,20 @@ int main (int argc, char **argv)
     
     timestamp_type time1, time2;
     get_timestamp(&time1);
+
+    #pragma omp parallel
+    {
+      #pragma omp master
+      {
+      nthreads = omp_get_num_threads();
+      printf("Number of threads = %d\n ",nthreads);
+      }
+    }
+    
+    /*
+      nthreads = omp_get_num_threads();
+      printf("Number of threads = %d\n ",nthreads);
+    */
     
     
 /*    printf("========= Jacobi Method ========= \n");
@@ -43,19 +59,24 @@ int main (int argc, char **argv)
     iter = 0;
     while (res > tol) {
         
-
-        for (i = 1; i < n - 1; ++i) {
+        #pragma omp parallel for default(none) shared(u_new,u,f,n,h) private(i) 
+          for (i = 1; i < n - 1; ++i) {
             u_new[i] = (f[i]*h*h + u[i-1] + u[i+1])/2;
-        }
-        for (i = 1; i < n - 1; ++i) {
+          }
+        
+
+        #pragma omp parallel for shared(u_new,u,n) private(i) 
+          for (i = 1; i < n - 1; ++i) {
             u[i] = u_new[i];
-        }
+          }
         
         // Calculate Residual
         res = 0;
-        for (i = 1; i < n - 1; ++i) {
-            res = res + fabs(f[i]*h*h - (-u[i-1] + 2*u[i] - u[i+1]));
-        }
+        #pragma omp parallel for shared(u,f,n) private(i) \
+        reduction(+:res) 
+          for (i = 1; i < n - 1; ++i) {
+            res += fabs(f[i]*h*h - (-u[i-1] + 2*u[i] - u[i+1]));
+          }
         
         iter = iter + 1;
         //printf("Iter %ld: res = %e \n", iter,res);
