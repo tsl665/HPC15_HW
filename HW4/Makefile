@@ -31,3 +31,6 @@ convolution_color: convolution_color.o ppma_io.o cl-helper.o
 
 clean:
 	rm -f $(EXECUTABLES) *.o
+
+cleanppm:
+	rm -f output*.ppm

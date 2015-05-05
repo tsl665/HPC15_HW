@@ -9,6 +9,7 @@
 #include "timing.h"
 #include "cl-helper.h"
 #include "ppma_io.h"
+#include <string.h>
 
 #define FILTER_WIDTH 7
 #define HALF_FILTER_WIDTH 3
@@ -110,7 +111,10 @@ int main(int argc, char *argv[])
   int odd_or_even = num_loops - eff_num_loops * 2;
   
   printf("num_loops = %d; eff_num_loops = %d; odd_or_even = %d; \n",num_loops, eff_num_loops, odd_or_even);
-
+ 
+  char str_num_loops[8];
+  sprintf(str_num_loops,"%d",num_loops);
+ 
   // --------------------------------------------------------------------------
   // load image
   // --------------------------------------------------------------------------
@@ -127,8 +131,6 @@ int main(int argc, char *argv[])
   if(!congray) { fprintf(stderr, "alloc gray"); abort(); }
   posix_memalign((void**)&congray_cl, 32, 4*xsize*ysize*sizeof(float));
   if(!congray_cl) { fprintf(stderr, "alloc gray"); abort(); }
-  posix_memalign((void**)&gray2, 32, 4*xsize*ysize*sizeof(float));
-  if(!gray2) { fprintf(stderr, "alloc gray2"); abort(); }
   posix_memalign((void**)&congray2, 32, 4*xsize*ysize*sizeof(float));
   if(!congray2) { fprintf(stderr, "alloc congray2"); abort(); }
 
@@ -204,7 +206,12 @@ int main(int argc, char *argv[])
     g[n] = (int)(congray[4*n+1] * rgb_max);
     b[n] = (int)(congray[4*n+2] * rgb_max);
   }
-  error = ppma_write("output_cpu.ppm", xsize, ysize, r, g, b);
+  char outname[50];
+  strcpy(outname, "output_cpu");
+  strcat(outname,str_num_loops);
+  strcat(outname,".ppm");
+
+  error = ppma_write(outname, xsize, ysize, r, g, b);
   if(error) { fprintf(stderr, "error writing image"); abort(); }
 
   // --------------------------------------------------------------------------
@@ -345,12 +352,6 @@ int main(int argc, char *argv[])
   get_timestamp(&toc);
 
   double elapsed = timestamp_diff_in_seconds(tic,toc)/num_loops;
-  printf("%f s\n", elapsed);
-  printf("%f MPixels/s\n", xsize*ysize/1e6/elapsed);
-  printf("%f GBit/s\n", 4*2*xsize*ysize*sizeof(float)/1e9/elapsed);
-  printf("%f GFlop/s\n",4*(xsize-HALF_FILTER_WIDTH)*(ysize-HALF_FILTER_WIDTH)
-	 *FILTER_WIDTH*FILTER_WIDTH/1e9/elapsed);
-
   // --------------------------------------------------------------------------
   // transfer back & check
   // --------------------------------------------------------------------------
@@ -402,8 +403,45 @@ int main(int argc, char *argv[])
     g[n] = (int)(congray_cl[4*n+1] * rgb_max);
     b[n] = (int)(congray_cl[4*n+2] * rgb_max);
   }
-  error = ppma_write("output_cl.ppm", xsize, ysize, r, g, b);
+
+  char outname_cl[50];
+  strcpy(outname_cl, "output_cl");
+  strcat(outname_cl,str_num_loops);
+  strcat(outname_cl,".ppm");
+
+
+  error = ppma_write(outname_cl, xsize, ysize, r, g, b);
   if(error) { fprintf(stderr, "error writing image"); abort(); }
+
+  printf("%f s\n", elapsed);
+  printf("%f MPixels/s\n", xsize*ysize/1e6/elapsed);
+  printf("%f GBit/s\n", 4*2*xsize*ysize*sizeof(float)/1e9/elapsed);
+  printf("%f GFlop/s\n",4*(xsize-HALF_FILTER_WIDTH)*(ysize-HALF_FILTER_WIDTH)
+	 *FILTER_WIDTH*FILTER_WIDTH/1e9/elapsed);
+
+
+
+{
+    FILE* fd = NULL;
+    char filename[256];
+    snprintf(filename, 256, "output_time%d.txt", num_loops);
+    fd = fopen(filename,"w+");
+
+    if(NULL == fd)
+    {
+      printf("Error opening file \n");
+      return 1;
+    }
+
+
+    fprintf(fd, "%f s\n", elapsed);
+    fprintf(fd, "%f MPixels/s\n", xsize*ysize/1e6/elapsed);
+    fprintf(fd, "%f GBit/s\n", 4*2*xsize*ysize*sizeof(float)/1e9/elapsed);
+    fprintf(fd, "%f GFlop/s\n",4*(xsize-HALF_FILTER_WIDTH)*(ysize-HALF_FILTER_WIDTH)
+	 *FILTER_WIDTH*FILTER_WIDTH/1e9/elapsed);
+    fclose(fd);
+  }
+
 
   // --------------------------------------------------------------------------
   // clean up
@@ -417,7 +455,9 @@ int main(int argc, char *argv[])
   free(gray);
   free(congray);
   free(congray_cl);
+  free(congray2);
   free(r);
   free(b);
   free(g);
+
 }
