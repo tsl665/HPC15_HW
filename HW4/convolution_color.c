@@ -109,7 +109,8 @@ int main(int argc, char *argv[])
   const int num_loops = atoi(argv[2]);
   int eff_num_loops = num_loops / 2;
   int odd_or_even = num_loops - eff_num_loops * 2;
-  
+  timestamp_type tic, toc;
+
   printf("num_loops = %d; eff_num_loops = %d; odd_or_even = %d; \n",num_loops, eff_num_loops, odd_or_even);
  
   char str_num_loops[8];
@@ -152,7 +153,7 @@ int main(int argc, char *argv[])
   // --------------------------------------------------------------------------
   
       
-  printf("Haha\n");
+  get_timestamp(&tic);
   for (int k = 0; k < num_loops; k++) {
   for(int i = HALF_FILTER_WIDTH; i < ysize - HALF_FILTER_WIDTH; ++i)
   {
@@ -196,6 +197,11 @@ int main(int argc, char *argv[])
   }
       
   }
+
+  get_timestamp(&toc);
+
+  double elapsed_cpu = timestamp_diff_in_seconds(tic,toc);
+
 
   // --------------------------------------------------------------------------
   // output cpu filtered image
@@ -275,7 +281,7 @@ int main(int argc, char *argv[])
         queue, buf_filter, /*blocking*/ CL_TRUE, /*offset*/ 0,
         FILTER_WIDTH*FILTER_WIDTH*sizeof(float), filter, 0, NULL, NULL));
 
-  // --------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   // run code on device
   // --------------------------------------------------------------------------
 
@@ -300,7 +306,6 @@ int main(int argc, char *argv[])
   print_kernel_info(queue, knl);
 
   CALL_CL_SAFE(clFinish(queue));
-  timestamp_type tic, toc;
   get_timestamp(&tic);
  // for(int loop = 0; loop < num_loops; ++loop)
  // {
@@ -322,6 +327,7 @@ int main(int argc, char *argv[])
   CALL_CL_SAFE(clSetKernelArg(knl, 7, sizeof(localHeight), &localHeight));
   CALL_CL_SAFE(clSetKernelArg(knl, 8, sizeof(localWidth), &localWidth));
 
+  CALL_CL_SAFE(clFinish(queue));
 
     CALL_CL_SAFE(clEnqueueNDRangeKernel(queue, knl, 2, NULL,
           global_size, local_size, 0, NULL, NULL));
@@ -342,6 +348,8 @@ int main(int argc, char *argv[])
   CALL_CL_SAFE(clSetKernelArg(knl, 7, sizeof(localHeight), &localHeight));
   CALL_CL_SAFE(clSetKernelArg(knl, 8, sizeof(localWidth), &localWidth));
 
+  CALL_CL_SAFE(clFinish(queue));
+
     CALL_CL_SAFE(clEnqueueNDRangeKernel(queue, knl, 2, NULL,
           global_size, local_size, 0, NULL, NULL));
 
@@ -351,7 +359,7 @@ int main(int argc, char *argv[])
  // }
   get_timestamp(&toc);
 
-  double elapsed = timestamp_diff_in_seconds(tic,toc)/num_loops;
+  double elapsed = timestamp_diff_in_seconds(tic,toc);
   // --------------------------------------------------------------------------
   // transfer back & check
   // --------------------------------------------------------------------------
@@ -414,18 +422,18 @@ int main(int argc, char *argv[])
   if(error) { fprintf(stderr, "error writing image"); abort(); }
 
   printf("%f s\n", elapsed);
-  printf("%f MPixels/s\n", xsize*ysize/1e6/elapsed);
-  printf("%f GBit/s\n", 4*2*xsize*ysize*sizeof(float)/1e9/elapsed);
+  printf("%f MPixels/s\n", xsize*ysize/1e6/elapsed*num_loops);
+  printf("%f GBit/s\n", 4*2*xsize*ysize*sizeof(float)/1e9/elapsed*num_loops);
   printf("%f GFlop/s\n",4*(xsize-HALF_FILTER_WIDTH)*(ysize-HALF_FILTER_WIDTH)
-	 *FILTER_WIDTH*FILTER_WIDTH/1e9/elapsed);
+	 *FILTER_WIDTH*FILTER_WIDTH/1e9/elapsed*num_loops);
 
 
 
 {
     FILE* fd = NULL;
     char filename[256];
-    snprintf(filename, 256, "output_time%d.txt", num_loops);
-    fd = fopen(filename,"w+");
+    snprintf(filename, 256, "output_time.txt");
+    fd = fopen(filename,"a");
 
     if(NULL == fd)
     {
@@ -434,11 +442,23 @@ int main(int argc, char *argv[])
     }
 
 
-    fprintf(fd, "%f s\n", elapsed);
-    fprintf(fd, "%f MPixels/s\n", xsize*ysize/1e6/elapsed);
-    fprintf(fd, "%f GBit/s\n", 4*2*xsize*ysize*sizeof(float)/1e9/elapsed);
+    fprintf(fd, "num_loops = %d\n", num_loops);
+
+
+    fprintf(fd, "Speed and Time for CPU:\n");
+    fprintf(fd, "%f s\n", elapsed_cpu);
+    fprintf(fd, "%f MPixels/s\n", xsize*ysize/1e6/elapsed_cpu*num_loops);
+    fprintf(fd, "%f GBit/s\n", 4*2*xsize*ysize*sizeof(float)/1e9/elapsed_cpu*num_loops);
     fprintf(fd, "%f GFlop/s\n",4*(xsize-HALF_FILTER_WIDTH)*(ysize-HALF_FILTER_WIDTH)
-	 *FILTER_WIDTH*FILTER_WIDTH/1e9/elapsed);
+	 *FILTER_WIDTH*FILTER_WIDTH/1e9/elapsed_cpu*num_loops);
+
+    fprintf(fd, "Speed and Time for GPU:\n");
+    fprintf(fd, "%f s\n", elapsed);
+    fprintf(fd, "%f MPixels/s\n", xsize*ysize/1e6/elapsed*num_loops);
+    fprintf(fd, "%f GBit/s\n", 4*2*xsize*ysize*sizeof(float)/1e9/elapsed*num_loops);
+    fprintf(fd, "%f GFlop/s\n",4*(xsize-HALF_FILTER_WIDTH)*(ysize-HALF_FILTER_WIDTH)
+	 *FILTER_WIDTH*FILTER_WIDTH/1e9/elapsed*num_loops);
+    fprintf(fd,"====================================\n");
     fclose(fd);
   }
 

@@ -76,5 +76,236 @@ Monday, May.
 Sunli Tang
 \end_layout
 
+\begin_layout Section
+Image Convolution with OpenCL
+\end_layout
+
+\begin_layout Standard
+Basically, I do a little bit modification to the convolution_color.c file
+ in lecture11 repository.
+ The only thing that needs to be careful is that you do not want to copy
+ the 
+\begin_inset Formula $(k-1)$
+\end_inset
+
+ times blurred image back to host memory -- it is an unnecessary cost .
+ The other parts are straightforward.
+ I run my code using Courant GPU Computing host opencl1.cims.nyu.edu.
+\end_layout
+
+\begin_layout Standard
+The following pictures are original image, images blurred 
+\begin_inset Formula $30$
+\end_inset
+
+ times and images blurred 
+\begin_inset Formula $90$
+\end_inset
+
+ times repectively (Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "picture"
+
+\end_inset
+
+).
+ 
+\end_layout
+
+\begin_layout Standard
+In addition, I plot the time elapsed (Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "time"
+
+\end_inset
+
+) and work rate (Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "workrate"
+
+\end_inset
+
+) of CPU and GPU respectively.
+ We can see from the plot of time elapsed that, for both CPU and GPU, the
+ time consumed is linear in number of loops, but the cost for CPU is 
+\begin_inset Formula $20$
+\end_inset
+
+ times of cost of GPU (for large number of loops).
+ In addition, we see that the work rate of CPU is about constant, but for
+ GPU it increase dramatically in the beginning and levels off.
+ The reason for that is, in GPU computing, when the task is small, the work
+ is dominate by the overhead (set up platform, pass memory from host to
+ device, ect.) .
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename bike.ppm
+	scale 30
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Graphics
+	filename output_cpu30.ppm
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename output_cl30.ppm
+	scale 30
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Graphics
+	filename output_cpu90.ppm
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename output_cl90.ppm
+	scale 30
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+first row: original image; second row: image blurred 
+\begin_inset Formula $30$
+\end_inset
+
+ time using CPU(left) and GPU(right); third row: image blurred 
+\begin_inset Formula $90$
+\end_inset
+
+ times using CPU(left) and GPU(right).
+\begin_inset CommandInset label
+LatexCommand label
+name "picture"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename TimePlot.eps
+	scale 80
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Time elapsed for blurring algorithm using CPU and GPU
+\begin_inset CommandInset label
+LatexCommand label
+name "time"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename WorkRatePlot.eps
+	scale 80
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Work rate for blurring algorithm using CPU and GPU
+\begin_inset CommandInset label
+LatexCommand label
+name "workrate"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \end_body
 \end_document

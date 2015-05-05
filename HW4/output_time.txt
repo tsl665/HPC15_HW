@@ -1,0 +1,96 @@
+num_loops = 1
+Speed and Time for CPU:
+0.036191 s
+6.875490 MPixels/s
+0.220016 GBit/s
+1.331268 GFlop/s
+Speed and Time for GPU:
+0.009623 s
+25.858172 MPixels/s
+0.827462 GBit/s
+5.006792 GFlop/s
+====================================
+num_loops = 30
+Speed and Time for CPU:
+1.054707 s
+7.077756 MPixels/s
+0.226488 GBit/s
+1.370431 GFlop/s
+Speed and Time for GPU:
+0.061363 s
+121.653265 MPixels/s
+3.892904 GBit/s
+23.555131 GFlop/s
+====================================
+num_loops = 60
+Speed and Time for CPU:
+2.110424 s
+7.074370 MPixels/s
+0.226380 GBit/s
+1.369776 GFlop/s
+Speed and Time for GPU:
+0.106257 s
+140.508241 MPixels/s
+4.496264 GBit/s
+27.205929 GFlop/s
+====================================
+num_loops = 90
+Speed and Time for CPU:
+3.162525 s
+7.081329 MPixels/s
+0.226603 GBit/s
+1.371123 GFlop/s
+Speed and Time for GPU:
+0.152872 s
+146.494698 MPixels/s
+4.687830 GBit/s
+28.365057 GFlop/s
+====================================
+num_loops = 120
+Speed and Time for CPU:
+4.224425 s
+7.068380 MPixels/s
+0.226188 GBit/s
+1.368616 GFlop/s
+Speed and Time for GPU:
+0.197536 s
+151.161766 MPixels/s
+4.837177 GBit/s
+29.268719 GFlop/s
+====================================
+num_loops = 150
+Speed and Time for CPU:
+5.277377 s
+7.072605 MPixels/s
+0.226323 GBit/s
+1.369434 GFlop/s
+Speed and Time for GPU:
+0.242202 s
+154.105774 MPixels/s
+4.931385 GBit/s
+29.838753 GFlop/s
+====================================
+num_loops = 180
+Speed and Time for CPU:
+6.332852 s
+7.072605 MPixels/s
+0.226323 GBit/s
+1.369434 GFlop/s
+Speed and Time for GPU:
+0.286000 s
+156.607725 MPixels/s
+5.011447 GBit/s
+30.323194 GFlop/s
+====================================
+num_loops = 1
+Speed and Time for CPU:
+0.036119 s
+6.889286 MPixels/s
+0.220457 GBit/s
+1.333939 GFlop/s
+Speed and Time for GPU:
+0.009794 s
+25.407616 MPixels/s
+0.813044 GBit/s
+4.919553 GFlop/s
+====================================
