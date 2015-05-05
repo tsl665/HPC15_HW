@@ -106,7 +106,10 @@ int main(int argc, char *argv[])
 
   const char* filename = argv[1];
   const int num_loops = atoi(argv[2]);
-
+  int eff_num_loops = num_loops / 2;
+  int odd_or_even = num_loops - eff_num_loops * 2;
+  
+  printf("num_loops = %d; eff_num_loops = %d; odd_or_even = %d; \n",num_loops, eff_num_loops, odd_or_even);
 
   // --------------------------------------------------------------------------
   // load image
@@ -231,11 +234,11 @@ int main(int argc, char *argv[])
   // allocate device memory
   // --------------------------------------------------------------------------
   cl_int status;
-  cl_mem buf_gray = clCreateBuffer(ctx, CL_MEM_READ_ONLY,
+  cl_mem buf_gray = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
      deviceDataSize, 0, &status);
   CHECK_CL_ERROR(status, "clCreateBuffer");
 
-  cl_mem buf_congray = clCreateBuffer(ctx, CL_MEM_WRITE_ONLY,
+  cl_mem buf_congray = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
       deviceDataSize, 0, &status);
   CHECK_CL_ERROR(status, "clCreateBuffer");
 
@@ -246,6 +249,7 @@ int main(int argc, char *argv[])
   // --------------------------------------------------------------------------
   // transfer to device
   // --------------------------------------------------------------------------
+
 #ifdef NON_OPTIMIZED
   CALL_CL_SAFE(clEnqueueWriteBuffer(
         queue, buf_gray, /*blocking*/ CL_TRUE, /*offset*/ 0,
@@ -283,6 +287,24 @@ int main(int argc, char *argv[])
   cl_int localHeight = local_size[1] + paddingPixels;
   size_t localMemSize = 4 * localWidth * localHeight * sizeof(float);
 
+  // --------------------------------------------------------------------------
+  // print kernel info
+  // --------------------------------------------------------------------------
+  print_kernel_info(queue, knl);
+
+  CALL_CL_SAFE(clFinish(queue));
+  timestamp_type tic, toc;
+  get_timestamp(&tic);
+ // for(int loop = 0; loop < num_loops; ++loop)
+ // {
+ 
+  for (int k = 0; k < eff_num_loops + 1; k++)
+  {
+
+    if ( ( k == eff_num_loops) && (odd_or_even == 0) )
+      break;
+
+
   CALL_CL_SAFE(clSetKernelArg(knl, 0, sizeof(buf_gray), &buf_gray));
   CALL_CL_SAFE(clSetKernelArg(knl, 1, sizeof(buf_congray), &buf_congray));
   CALL_CL_SAFE(clSetKernelArg(knl, 2, sizeof(buf_filter), &buf_filter));
@@ -293,20 +315,33 @@ int main(int argc, char *argv[])
   CALL_CL_SAFE(clSetKernelArg(knl, 7, sizeof(localHeight), &localHeight));
   CALL_CL_SAFE(clSetKernelArg(knl, 8, sizeof(localWidth), &localWidth));
 
-  // --------------------------------------------------------------------------
-  // print kernel info
-  // --------------------------------------------------------------------------
-  print_kernel_info(queue, knl);
 
-  CALL_CL_SAFE(clFinish(queue));
-  timestamp_type tic, toc;
-  get_timestamp(&tic);
-  for(int loop = 0; loop < num_loops; ++loop)
-  {
     CALL_CL_SAFE(clEnqueueNDRangeKernel(queue, knl, 2, NULL,
           global_size, local_size, 0, NULL, NULL));
-  }
+
+
   CALL_CL_SAFE(clFinish(queue));
+
+    if ( ( k == eff_num_loops) && (odd_or_even == 1) )
+      break;
+
+  CALL_CL_SAFE(clSetKernelArg(knl, 0, sizeof(buf_congray), &buf_congray));
+  CALL_CL_SAFE(clSetKernelArg(knl, 1, sizeof(buf_gray), &buf_gray));
+  CALL_CL_SAFE(clSetKernelArg(knl, 2, sizeof(buf_filter), &buf_filter));
+  CALL_CL_SAFE(clSetKernelArg(knl, 3, sizeof(rows), &rows));
+  CALL_CL_SAFE(clSetKernelArg(knl, 4, sizeof(cols), &cols));
+  CALL_CL_SAFE(clSetKernelArg(knl, 5, sizeof(filterWidth), &filterWidth));
+  CALL_CL_SAFE(clSetKernelArg(knl, 6, localMemSize, NULL));
+  CALL_CL_SAFE(clSetKernelArg(knl, 7, sizeof(localHeight), &localHeight));
+  CALL_CL_SAFE(clSetKernelArg(knl, 8, sizeof(localWidth), &localWidth));
+
+    CALL_CL_SAFE(clEnqueueNDRangeKernel(queue, knl, 2, NULL,
+          global_size, local_size, 0, NULL, NULL));
+
+  CALL_CL_SAFE(clFinish(queue));
+ 
+  }
+ // }
   get_timestamp(&toc);
 
   double elapsed = timestamp_diff_in_seconds(tic,toc)/num_loops;
@@ -319,11 +354,22 @@ int main(int argc, char *argv[])
   // --------------------------------------------------------------------------
   // transfer back & check
   // --------------------------------------------------------------------------
+
+
+
+
 #ifdef NON_OPTIMIZED
+  if (odd_or_even == 1)
   CALL_CL_SAFE(clEnqueueReadBuffer(
-        queue, buf_congray, /*blocking*/ CL_TRUE, /*offset*/ 0,
+        queue, buf_congray,  CL_TRUE,  0,
         deviceDataSize, congray_cl,
         0, NULL, NULL));
+  else
+   CALL_CL_SAFE(clEnqueueReadBuffer(
+        queue, buf_gray,  CL_TRUE,  0,
+        deviceDataSize, congray_cl,
+        0, NULL, NULL));
+ 
 #else
   buffer_origin[0] = 3*sizeof(float);
   buffer_origin[1] = 3;
@@ -341,7 +387,11 @@ int main(int argc, char *argv[])
       buffer_origin, host_origin, region,
       deviceWidth*sizeof(float), 0, xsize*sizeof(float), 0,
       congray_cl, 0, NULL, NULL);
-#endif
+#endif 
+
+
+
+
 
   // --------------------------------------------------------------------------
   // output OpenCL filtered image
