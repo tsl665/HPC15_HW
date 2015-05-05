@@ -1,0 +1,7 @@
+========= Jacobi Method ========= 
+N =  1000 
+Number of threads = 8
+ Initial Residual is 2.000000e-03 
+Final Residual is 1.999992e-09 
+Converge in 1677566 Iterations. 
+Time elapsed is 59.998803 seconds.

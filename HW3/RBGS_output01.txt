@@ -1,0 +1,7 @@
+========= Red-Black Gauss-Seidel Method ========= 
+N =  1000 
+Number of threads = 1
+ Initial Residual is 2.000000e-03 
+Final Residual is 1.999997e-09 
+Converge in 838783 Iterations. 
+Time elapsed is 26.299409 seconds.
